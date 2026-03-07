@@ -1,0 +1,25 @@
+services:
+  - type: worker          # Background service — 24/7 chalta rahega
+    name: yt-autopost-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false         # Render dashboard mein manually daalo
+      - key: GOOGLE_DRIVE_FOLDER_ID
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: YT_CATEGORY
+        value: entertainment
+      - key: YT_PRIVACY
+        value: public
+      - key: UPLOAD_INTERVAL_HOURS
+        value: "3"
+      - key: DRIVE_CHECK_MINUTES
+        value: "15"

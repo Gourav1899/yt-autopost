@@ -1,0 +1,72 @@
+# =============================================
+# TubeAutomate v3 — Git Update Guide
+# Existing yt-autopost repo mein yeh changes karo
+# =============================================
+
+# STEP 1 — VS Code terminal mein project folder pe jaao
+cd D:\WEB DEVLOPMENT\langchain_project
+
+# STEP 2 — Purani files delete karo (bot wali)
+# Yeh files replace hongi:
+# - main.py          (FastAPI wala)
+# - drive_watcher.py (per-channel token)
+# - youtube_uploader.py (per-channel token)
+# - metadata_generator.py (AI style support)
+# - thumbnail_maker.py (per-user cloudinary)
+# - requirements.txt (FastAPI + Supabase added)
+
+# STEP 3 — Naye files add karo (ZIP se copy karo):
+# - database.py      (Supabase client)
+# - scheduler.py     (multi-channel scheduler)
+# - processor.py     (video processor)
+# - Procfile         (Render start command)
+# - routes/          (poora folder)
+#   - __init__.py
+#   - channels.py
+#   - queue.py
+#   - analytics.py
+#   - admin.py
+
+# STEP 4 — Purani bot-only files delete karo (ab zaroorat nahi)
+# - queue_manager.py  (Supabase queue use hoga)
+# - setup.py          (zaroorat nahi)
+# - get_youtube_token.py
+
+# STEP 5 — .gitignore update karo
+echo "credentials/" > .gitignore
+echo ".env" >> .gitignore
+echo "__pycache__/" >> .gitignore
+echo "*.pyc" >> .gitignore
+echo "venv/" >> .gitignore
+echo "/tmp/" >> .gitignore
+echo "video_queue.json" >> .gitignore
+echo "processed_videos.json" >> .gitignore
+
+# STEP 6 — Git commit aur push
+git add .
+git commit -m "v3: Multi-channel FastAPI + Supabase upgrade"
+git push origin main
+
+# =============================================
+# RENDER PE YEH CHANGES KARO
+# =============================================
+# Render → yt-autopost service → Settings
+
+# Start Command change karo:
+# PURANA: python main.py
+# NAYA:   uvicorn main:app --host 0.0.0.0 --port $PORT
+
+# Environment Variables ADD karo (existing ke saath):
+# SUPABASE_URL         = https://xxxxx.supabase.co
+# SUPABASE_SERVICE_KEY = eyJxxxxx (Service Role Key)
+# GOOGLE_CLIENT_ID     = 737934707545-xxxxx.apps.googleusercontent.com
+# GOOGLE_CLIENT_SECRET = GOCSPX-xxxxx (naya wala jo reset kiya tha)
+
+# YEH VARIABLES HATAO (ab zaroorat nahi):
+# DRIVE_CREDENTIALS_B64
+# DRIVE_TOKEN_B64
+# YOUTUBE_CREDENTIALS_B64
+# YOUTUBE_TOKEN_B64
+# (Kyunki ab har channel ka alag token Supabase mein store hoga)
+
+# SAVE → Auto redeploy hoga!

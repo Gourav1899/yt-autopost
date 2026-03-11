@@ -109,21 +109,20 @@ def daily_drive_refresh():
 
 
 def run_scheduler():
-    """Main scheduler loop"""
     log.info("=" * 50)
     log.info("🤖 Multi-Channel Scheduler Starting")
     log.info("=" * 50)
 
-    # Startup pe saare channels ke videos load karo
-    daily_drive_refresh()
-
-    # Har minute check karo (schedule times match ke liye)
+    # Pehle scheduler start karo — port bind hone do
     schedule.every(1).minutes.do(check_and_upload)
-
-    # Roz subah 8:45 pe Drive refresh
     schedule.every().day.at("08:45").do(daily_drive_refresh)
-
+    
     log.info("✅ Scheduler running — checking every minute")
+
+    # 30 second baad Drive refresh karo (port bind hone ke baad)
+    import time
+    time.sleep(30)
+    daily_drive_refresh()
 
     while True:
         schedule.run_pending()

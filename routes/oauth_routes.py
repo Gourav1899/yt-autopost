@@ -49,11 +49,8 @@ def make_flow(scopes, redirect_uri):
     )
 
 
-# ─── YouTube OAuth ───────────────────────────────────────
-
 @router.get("/youtube/start")
 async def youtube_oauth_start(user_id: str, channel_name: str = "My Channel"):
-    """Frontend se call karo — YouTube login URL milega"""
     redirect_uri = f"{BACKEND_URL}/oauth/youtube/callback"
     flow = make_flow(YT_SCOPES, redirect_uri)
     auth_url, _ = flow.authorization_url(
@@ -67,7 +64,6 @@ async def youtube_oauth_start(user_id: str, channel_name: str = "My Channel"):
 
 @router.get("/youtube/callback")
 async def youtube_oauth_callback(code: str, state: str):
-    """Google redirect karta hai yahan — token save karo"""
     try:
         user_id, channel_name = state.split("|", 1)
         redirect_uri = f"{BACKEND_URL}/oauth/youtube/callback"
@@ -75,7 +71,6 @@ async def youtube_oauth_callback(code: str, state: str):
         flow.fetch_token(code=code)
         creds = flow.credentials
 
-        # YouTube channel info lo
         yt_service = build("youtube", "v3", credentials=creds)
         ch_resp = yt_service.channels().list(part="snippet", mine=True).execute()
         yt_channel = ch_resp["items"][0] if ch_resp.get("items") else {}
@@ -83,7 +78,6 @@ async def youtube_oauth_callback(code: str, state: str):
         yt_channel_name = yt_channel.get("snippet", {}).get("title", channel_name)
         yt_avatar = yt_channel.get("snippet", {}).get("thumbnails", {}).get("default", {}).get("url", "")
 
-        # Supabase mein pending channel update karo
         supabase.table("channels").update({
             "channel_yt_id": yt_channel_id,
             "channel_name": yt_channel_name,
@@ -92,21 +86,17 @@ async def youtube_oauth_callback(code: str, state: str):
             "yt_refresh_token": creds.refresh_token,
         }).eq("user_id", user_id).eq("yt_access_token", None).execute()
 
-        # Frontend pe redirect karo success ke saath
-        frontend_url = os.environ.get("FRONTEND_URL", "https://your-app.lovable.app")
+        frontend_url = os.environ.get("FRONTEND_URL", "https://auto-tube-pro.lovable.app")
         return RedirectResponse(f"{frontend_url}/channels?yt_connected=true")
 
     except Exception as e:
         log.error(f"YouTube OAuth error: {e}")
-        frontend_url = os.environ.get("FRONTEND_URL", "https://your-app.lovable.app")
+        frontend_url = os.environ.get("FRONTEND_URL", "https://auto-tube-pro.lovable.app")
         return RedirectResponse(f"{frontend_url}/channels?yt_error={str(e)}")
 
 
-# ─── Drive OAuth ─────────────────────────────────────────
-
 @router.get("/drive/start")
 async def drive_oauth_start(user_id: str, channel_id: str):
-    """Drive connect karne ke liye URL"""
     redirect_uri = f"{BACKEND_URL}/oauth/drive/callback"
     flow = make_flow(DRIVE_SCOPES, redirect_uri)
     auth_url, _ = flow.authorization_url(
@@ -119,7 +109,6 @@ async def drive_oauth_start(user_id: str, channel_id: str):
 
 @router.get("/drive/callback")
 async def drive_oauth_callback(code: str, state: str):
-    """Drive token save karo"""
     try:
         user_id, channel_id = state.split("|", 1)
         redirect_uri = f"{BACKEND_URL}/oauth/drive/callback"
@@ -139,16 +128,14 @@ async def drive_oauth_callback(code: str, state: str):
             "drive_token_data": token_data
         }).eq("id", channel_id).eq("user_id", user_id).execute()
 
-        # Videos load karo immediately
         channel = supabase.table("channels").select("*").eq("id", channel_id).single().execute().data
         from scheduler import load_all_videos_for_channel
         added = load_all_videos_for_channel(channel)
-        log.info(f"✅ Drive connected! {added} videos loaded")
 
-        frontend_url = os.environ.get("FRONTEND_URL", "https://your-app.lovable.app")
+        frontend_url = os.environ.get("FRONTEND_URL", "https://auto-tube-pro.lovable.app")
         return RedirectResponse(f"{frontend_url}/channels?drive_connected=true&videos={added}")
 
     except Exception as e:
         log.error(f"Drive OAuth error: {e}")
-        frontend_url = os.environ.get("FRONTEND_URL", "https://your-app.lovable.app")
+        frontend_url = os.environ.get("FRONTEND_URL", "https://auto-tube-pro.lovable.app")
         return RedirectResponse(f"{frontend_url}/channels?drive_error={str(e)}")
